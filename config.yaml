@@ -1,0 +1,31 @@
+environment:
+    
+    stage:
+    
+      http_server_addr: core:9400
+      
+      log_level: error
+      
+
+    development:
+    
+      http_server_addr: core:9400
+
+      log_level: debug
+      
+
+    testing:
+    
+      http_server_addr: localhost:9400
+
+      grpc_servers_addr:
+
+        auth: localhost:9401
+      
+        profile: localhost:9402
+      
+        chat: localhost:9403
+      
+        s3: localhost:9404
+
+      log_level: debug
