@@ -9,11 +9,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gorilla/mux"
 	"github.com/pawpawchat/core/config"
-	"github.com/pawpawchat/core/internal/infrastructure/handler"
-	"github.com/pawpawchat/core/internal/infrastructure/router"
-	"github.com/pawpawchat/core/pkg/middleware"
 	profile "github.com/pawpawchat/profile/api/pb"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -58,30 +54,6 @@ func settingUpServer(env config.Environment) *http.Server {
 		Handler: settingUpRouter(env),
 	}
 	return httpServer
-}
-
-func settingUpRouter(env config.Environment) *router.MuxRouter {
-	profile := profileServiceConn(env.GRPCPeers.Profile())
-
-	mux := mux.NewRouter()
-	rcfg := &router.Config{
-		Routes: []router.Route{
-			{
-				Path:    "/{username}",
-				Methods: []string{"GET"},
-				Handler: handler.GetProfileByUsernameHandler(profile),
-			},
-			{
-				Path:    "/{username}",
-				Methods: []string{"POST"},
-				Handler: handler.CreateProfileHandler(profile),
-			},
-		},
-		Middlewares: []func(http.Handler) http.Handler{
-			middleware.LogMiddleware(mux),
-		},
-	}
-	return router.NewMuxRouter(mux, rcfg)
 }
 
 func profileServiceConn(addr string) profile.ProfileServiceClient {
