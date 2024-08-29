@@ -1,4 +1,4 @@
-package handler
+package profile
 
 import (
 	"encoding/json"
@@ -7,11 +7,11 @@ import (
 
 	"github.com/pawpawchat/core/pkg/response"
 	"github.com/pawpawchat/core/pkg/validation"
-	"github.com/pawpawchat/profile/api/pb"
+	profilepb "github.com/pawpawchat/profile/api/pb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-func SetProfileAvatar(client pb.ProfileServiceClient) http.Handler {
+func AddProfileAvatar(client profilepb.ProfileServiceClient) http.Handler {
 	type SetProfileAvatarRequest struct {
 		ProfileID int64  `json:"profile_id"`
 		OrigURL   string `json:"orig_url"`
@@ -37,13 +37,13 @@ func SetProfileAvatar(client pb.ProfileServiceClient) http.Handler {
 			return
 		}
 
-		pbReq := &pb.SetProfileAvatarRequest{
+		pbReq := &profilepb.AddProfileAvatarRequest{
 			ProfileId: request.ProfileID,
 			OrigUrl:   request.OrigURL,
 			AddedAt:   timestamppb.New(addedAt),
 		}
 
-		avatar, err := client.SetProfileAvatar(r.Context(), pbReq)
+		avatar, err := client.AddProfileAvatar(r.Context(), pbReq)
 		if err != nil {
 			response.WriteProtoError(w, err)
 			return

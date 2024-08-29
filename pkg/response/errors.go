@@ -11,8 +11,8 @@ import (
 
 func WriteProtoError(w http.ResponseWriter, err error) {
 	type convert struct {
-		Message string
-		Details []any
+		Message string `json:"message"`
+		Details []any  `json:"details"`
 	}
 
 	status := status.Convert(err)
@@ -28,8 +28,8 @@ func WriteProtoError(w http.ResponseWriter, err error) {
 
 func WriteMissingFieldsError(w http.ResponseWriter, fields []string) {
 	type convert struct {
-		Message string
-		Fields  []string
+		Message string   `json:"message"`
+		Fields  []string `json:"fields"`
 	}
 
 	conv := convert{
@@ -43,9 +43,9 @@ func WriteMissingFieldsError(w http.ResponseWriter, fields []string) {
 
 func WriteParseBodyError(w http.ResponseWriter, err error) {
 	type convert struct {
-		Message string
-		Field   string
-		Reason  string
+		Message string `json:"message"`
+		Field   string `json:"field"`
+		Reason  string `json:"reason"`
 	}
 
 	conv := convert{

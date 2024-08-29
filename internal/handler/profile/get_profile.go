@@ -1,4 +1,4 @@
-package handler
+package profile
 
 import (
 	"net/http"
@@ -6,11 +6,11 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/pawpawchat/core/pkg/response"
-	"github.com/pawpawchat/profile/api/pb"
+	profilepb "github.com/pawpawchat/profile/api/pb"
 	_ "google.golang.org/genproto/googleapis/rpc/errdetails"
 )
 
-func GetProfileByUsernameHandler(client pb.ProfileServiceClient) http.Handler {
+func GetProfileByUsernameHandler(client profilepb.ProfileServiceClient) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		username := mux.Vars(r)["username"]
 
@@ -19,8 +19,8 @@ func GetProfileByUsernameHandler(client pb.ProfileServiceClient) http.Handler {
 			return
 		}
 
-		request := &pb.GetProfileRequest{
-			SearchBy: &pb.GetProfileRequest_Username{
+		request := &profilepb.GetProfileRequest{
+			SearchBy: &profilepb.GetProfileRequest_Username{
 				Username: username,
 			},
 		}
@@ -35,7 +35,7 @@ func GetProfileByUsernameHandler(client pb.ProfileServiceClient) http.Handler {
 	})
 }
 
-func GetProfileByIdHandler(client pb.ProfileServiceClient) http.Handler {
+func GetProfileByIdHandler(client profilepb.ProfileServiceClient) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		idRaw := r.URL.Query().Get("id")
 		if idRaw == "" {
@@ -49,8 +49,8 @@ func GetProfileByIdHandler(client pb.ProfileServiceClient) http.Handler {
 			return
 		}
 
-		request := &pb.GetProfileRequest{
-			SearchBy: &pb.GetProfileRequest_Id{
+		request := &profilepb.GetProfileRequest{
+			SearchBy: &profilepb.GetProfileRequest_Id{
 				Id: profileID,
 			},
 		}
