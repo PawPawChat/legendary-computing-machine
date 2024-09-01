@@ -20,16 +20,24 @@ type membersAdder interface {
 func AddChatMembersHandler(provider membersAdder) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var request chatpb.AddMemberRequest
-		if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-			response.WriteParseBodyError(w, err)
+
+		var err error
+		chatID := mux.Vars(r)["id"]
+		request.ChatId, err = strconv.ParseInt(chatID, 0, 10)
+		if err != nil {
+			response.Json().
+				BadRequest().
+				Body(map[string]any{
+					"error": map[string]any{
+						"message": "cannot parse chat id",
+						"value":   chatID,
+					}}).
+				MustWrite(w)
 			return
 		}
 
-		var err error
-		id := mux.Vars(r)["id"]
-		request.ChatId, err = strconv.ParseInt(id, 0, 10)
-		if err != nil {
-			response.Json().BadRequest().BadRequest().Body(map[string]any{"error": "incorrect chat id val=" + id}).MustWrite(w)
+		if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+			response.WriteParseBodyError(w, err)
 			return
 		}
 

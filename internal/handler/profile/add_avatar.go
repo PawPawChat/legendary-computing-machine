@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/pawpawchat/core/internal/convert"
 	"github.com/pawpawchat/core/pkg/response"
 	"github.com/pawpawchat/core/pkg/validation"
 	profilepb "github.com/pawpawchat/profile/api/pb"
@@ -26,14 +27,14 @@ func AddProfileAvatar(client profilepb.ProfileServiceClient) http.Handler {
 			return
 		}
 
-		addedAt, err := time.Parse(time.RFC3339, request.AddedAt)
-		if err != nil {
-			response.WriteParseBodyError(w, err)
+		if zerofs := validation.GetEmptyFields(request); len(zerofs) != 0 {
+			response.WriteMissingFieldsError(w, zerofs)
 			return
 		}
 
-		if zerofs := validation.GetEmptyFields(addedAt); len(zerofs) != 0 {
-			response.WriteMissingFieldsError(w, zerofs)
+		addedAt, err := time.Parse(time.RFC3339, request.AddedAt)
+		if err != nil {
+			response.WriteParseBodyError(w, err)
 			return
 		}
 
@@ -43,12 +44,12 @@ func AddProfileAvatar(client profilepb.ProfileServiceClient) http.Handler {
 			AddedAt:   timestamppb.New(addedAt),
 		}
 
-		avatar, err := client.AddProfileAvatar(r.Context(), pbReq)
+		respPb, err := client.AddProfileAvatar(r.Context(), pbReq)
 		if err != nil {
 			response.WriteProtoError(w, err)
 			return
 		}
 
-		response.Json().OK().Body(avatar).MustWrite(w)
+		response.Json().OK().Body(convert.MustAvatarPb(respPb.Avatar)).MustWrite(w)
 	})
 }

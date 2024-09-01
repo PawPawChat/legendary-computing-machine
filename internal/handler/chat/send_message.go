@@ -9,6 +9,8 @@ import (
 
 	"github.com/gorilla/mux"
 	chatpb "github.com/pawpawchat/chat/api/pb"
+	"github.com/pawpawchat/core/internal/convert"
+	"github.com/pawpawchat/core/internal/model"
 	"github.com/pawpawchat/core/pkg/response"
 	"github.com/pawpawchat/core/pkg/validation"
 	"google.golang.org/grpc"
@@ -21,11 +23,7 @@ type messageSender interface {
 
 func SendChatMessageHandler(provider messageSender) http.Handler {
 	type SendMessageRequest struct {
-		ChatID         int64  `json:"chat_id"`
-		SenderID       int64  `json:"sender_id"`
-		SenderUsername string `json:"sender_username"`
-		Body           string `json:"body"`
-		SentAt         string `json:"sent_at"`
+		model.Message
 	}
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -36,10 +34,17 @@ func SendChatMessageHandler(provider messageSender) http.Handler {
 		}
 
 		var err error
-		chat_id := mux.Vars(r)["id"]
-		request.ChatID, err = strconv.ParseInt(chat_id, 0, 10)
+		chatID := mux.Vars(r)["id"]
+		request.ChatID, err = strconv.ParseInt(chatID, 0, 10)
 		if err != nil {
-			response.Json().BadRequest().BadRequest().Body(map[string]any{"error": "incorrect chat id val=" + chat_id}).MustWrite(w)
+			response.Json().
+				BadRequest().
+				Body(map[string]any{
+					"error": map[string]any{
+						"message": "cannot parse chat id",
+						"value":   chatID,
+					}}).
+				MustWrite(w)
 			return
 		}
 
@@ -62,12 +67,12 @@ func SendChatMessageHandler(provider messageSender) http.Handler {
 			SentAt:         timestamppb.New(sentAt),
 		}
 
-		message, err := provider.SendMessage(r.Context(), &request_pb)
+		respPb, err := provider.SendMessage(r.Context(), &request_pb)
 		if err != nil {
 			response.WriteProtoError(w, err)
 			return
 		}
 
-		response.Json().Created().Body(message).MustWrite(w)
+		response.Json().Created().Body(convert.MustMessagePb(respPb.Message)).MustWrite(w)
 	})
 }

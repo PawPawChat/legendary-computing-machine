@@ -7,6 +7,7 @@ import (
 	"time"
 
 	chatpb "github.com/pawpawchat/chat/api/pb"
+	"github.com/pawpawchat/core/internal/convert"
 	"github.com/pawpawchat/core/pkg/response"
 	"github.com/pawpawchat/core/pkg/validation"
 	"google.golang.org/grpc"
@@ -49,12 +50,12 @@ func CreateChatHandler(creator chatCreator) http.Handler {
 			CreatedAt:     timestamppb.New(addedAt),
 		}
 
-		chat, err := creator.CreateChat(r.Context(), &requestpb)
+		respPb, err := creator.CreateChat(r.Context(), &requestpb)
 		if err != nil {
 			response.WriteProtoError(w, err)
 			return
 		}
 
-		response.Json().Created().Body(chat).MustWrite(w)
+		response.Json().Created().Body(convert.MustChatPb(respPb.Chat)).MustWrite(w)
 	})
 }

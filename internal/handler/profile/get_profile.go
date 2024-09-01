@@ -5,12 +5,19 @@ import (
 	"strconv"
 
 	"github.com/gorilla/mux"
+	"github.com/pawpawchat/core/internal/convert"
+	"github.com/pawpawchat/core/internal/model"
 	"github.com/pawpawchat/core/pkg/response"
 	profilepb "github.com/pawpawchat/profile/api/pb"
 	_ "google.golang.org/genproto/googleapis/rpc/errdetails"
 )
 
 func GetProfileByUsernameHandler(client profilepb.ProfileServiceClient) http.Handler {
+	type GetProfileResponse struct {
+		Profile *model.Profile  `json:"profile"`
+		Avatars []*model.Avatar `json:"avatars"`
+	}
+
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		username := mux.Vars(r)["username"]
 
@@ -25,42 +32,61 @@ func GetProfileByUsernameHandler(client profilepb.ProfileServiceClient) http.Han
 			},
 		}
 
-		profile, err := client.GetProfile(r.Context(), request)
+		respPb, err := client.GetProfile(r.Context(), request)
 		if err != nil {
 			response.WriteProtoError(w, err)
 			return
 		}
 
-		response.Json().OK().Body(profile).MustWrite(w)
+		response.Json().
+			OK().
+			Body(&GetProfileResponse{
+				Profile: convert.MustProfilePb(respPb.Profile),
+				Avatars: convert.MustFromPb(respPb.Avatars, convert.MustAvatarPb),
+			}).
+			MustWrite(w)
 	})
 }
 
 func GetProfileByIdHandler(client profilepb.ProfileServiceClient) http.Handler {
+	type GetProfileResponse struct {
+		Profile *model.Profile  `json:"profile"`
+		Avatars []*model.Avatar `json:"avatars"`
+	}
+
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		idRaw := r.URL.Query().Get("id")
-		if idRaw == "" {
-			response.Json().BadRequest().Body(map[string]any{"error": "missing id in query params"}).MustWrite(w)
-			return
-		}
-
-		profileID, err := strconv.ParseInt(idRaw, 0, 10)
+		idStr := mux.Vars(r)["id"]
+		id, err := strconv.ParseInt(idStr, 0, 10)
 		if err != nil {
-			response.WriteParseBodyError(w, err)
+			response.Json().
+				BadRequest().
+				Body(map[string]any{
+					"error": map[string]any{
+						"message": "cannot parse profile id",
+						"value":   idStr,
+					}}).
+				MustWrite(w)
 			return
 		}
 
-		request := &profilepb.GetProfileRequest{
+		requestPb := &profilepb.GetProfileRequest{
 			SearchBy: &profilepb.GetProfileRequest_Id{
-				Id: profileID,
+				Id: id,
 			},
 		}
 
-		profile, err := client.GetProfile(r.Context(), request)
+		respPb, err := client.GetProfile(r.Context(), requestPb)
 		if err != nil {
 			response.WriteProtoError(w, err)
 			return
 		}
 
-		response.Json().OK().Body(profile).MustWrite(w)
+		response.Json().
+			OK().
+			Body(&GetProfileResponse{
+				Profile: convert.MustProfilePb(respPb.Profile),
+				Avatars: convert.MustFromPb(respPb.Avatars, convert.MustAvatarPb),
+			}).
+			MustWrite(w)
 	})
 }

@@ -18,12 +18,19 @@ type membersGetter interface {
 func GetChatMembersHandler(provider membersGetter) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var request chatpb.GetMembersRequest
-		var err error
-		chatid := mux.Vars(r)["id"]
 
-		request.ChatId, err = strconv.ParseInt(chatid, 0, 10)
+		var err error
+		chatID := mux.Vars(r)["id"]
+		request.ChatId, err = strconv.ParseInt(chatID, 0, 10)
 		if err != nil {
-			response.Json().BadRequest().Body(map[string]any{"error": "missing chat id in path"}).MustWrite(w)
+			response.Json().
+				BadRequest().
+				Body(map[string]any{
+					"error": map[string]any{
+						"message": "cannot parse chat id",
+						"value":   chatID,
+					}}).
+				MustWrite(w)
 			return
 		}
 

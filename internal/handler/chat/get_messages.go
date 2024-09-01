@@ -7,6 +7,7 @@ import (
 
 	"github.com/gorilla/mux"
 	chatpb "github.com/pawpawchat/chat/api/pb"
+	"github.com/pawpawchat/core/internal/convert"
 	"github.com/pawpawchat/core/pkg/response"
 	"google.golang.org/grpc"
 )
@@ -20,19 +21,32 @@ func GetChatMessagesHandler(provider messageGetter) http.Handler {
 		var request chatpb.GetMessagesRequest
 
 		var err error
-		chat_id := mux.Vars(r)["id"]
-		request.ChatId, err = strconv.ParseInt(chat_id, 0, 10)
+		chatID := mux.Vars(r)["id"]
+		request.ChatId, err = strconv.ParseInt(chatID, 0, 10)
 		if err != nil {
-			response.Json().BadRequest().BadRequest().Body(map[string]any{"error": "incorrect chat id val=" + chat_id}).MustWrite(w)
+			response.Json().
+				BadRequest().
+				Body(map[string]any{
+					"error": map[string]any{
+						"message": "cannot parse chat id",
+						"value":   chatID,
+					}}).
+				MustWrite(w)
 			return
 		}
 
-		messages, err := provider.GetMessages(r.Context(), &request)
+		respPb, err := provider.GetMessages(r.Context(), &request)
 		if err != nil {
 			response.WriteProtoError(w, err)
 			return
 		}
 
-		response.Json().Created().Body(messages).MustWrite(w)
+		response.Json().
+			Created().
+			Body(map[string]any{
+				"chat_id":  respPb.ChatId,
+				"messages": convert.MustFromPb(respPb.Messages, convert.MustMessagePb),
+			}).
+			MustWrite(w)
 	})
 }

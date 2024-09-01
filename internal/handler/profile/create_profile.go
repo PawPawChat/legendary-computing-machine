@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/pawpawchat/core/internal/convert"
 	"github.com/pawpawchat/core/pkg/response"
 	"github.com/pawpawchat/core/pkg/validation"
 	profilepb "github.com/pawpawchat/profile/api/pb"
@@ -31,9 +32,15 @@ func CreateProfileHandler(client profilepb.ProfileServiceClient) http.Handler {
 			SecondName: request.SecondName,
 		}
 
-		profile, err := client.CreateProfile(r.Context(), pbReq)
+		respData, err := client.CreateProfile(r.Context(), pbReq)
 		if err != nil {
 			response.WriteProtoError(w, err)
+			return
+		}
+
+		profile, err := convert.ProfilePb(respData.Profile)
+		if err != nil {
+			response.Json().InternalError().Body(map[string]any{"error": err.Error()}).MustWrite(w)
 			return
 		}
 

@@ -2,18 +2,14 @@ module github.com/pawpawchat/core
 
 go 1.22.2
 
-replace github.com/pawpawchat/chat => /home/amicie/dev/pawpawchat/chat
-
-replace github.com/pawpawchat/profile => /home/amicie/dev/pawpawchat/profile
-
 require (
 	github.com/gorilla/mux v1.8.1
 	github.com/joho/godotenv v1.5.1
-	github.com/pawpawchat/chat v0.0.0-00010101000000-000000000000
-	github.com/pawpawchat/profile v0.0.0-20240826042740-916b5a899f74
+	github.com/pawpawchat/chat v0.0.0-20240829120046-a397658f0a8b
+	github.com/pawpawchat/profile v0.0.0-20240901001521-59e67f1e2083
 	github.com/stretchr/testify v1.9.0
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240827150818-7e3bb234dfed
-	google.golang.org/grpc v1.65.0
+	google.golang.org/grpc v1.66.0
 	google.golang.org/protobuf v1.34.2
 	gopkg.in/yaml.v3 v3.0.1
 )

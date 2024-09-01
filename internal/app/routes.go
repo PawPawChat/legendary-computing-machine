@@ -34,6 +34,11 @@ func settingUpRouter(env config.Environment) *router.MuxRouter {
 				Handler: profile.GetProfileByUsernameHandler(profile_client),
 			},
 			{
+				Path:    "/api/profiles/{id}",
+				Methods: []string{"PATCH"},
+				Handler: profile.UpdateProfileHandler(profile_client),
+			},
+			{
 				Path:    "/api/profiles/{username}/avatars",
 				Methods: []string{"POST"},
 				Handler: profile.AddProfileAvatar(profile_client),

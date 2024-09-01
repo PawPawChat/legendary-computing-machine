@@ -9,7 +9,6 @@ import (
 // jsonBuilder is a utility to build JSON responses for HTTP handlers. It handles
 // structuring the body, setting response codes, and writing the response to the client
 type jsonBuilder struct {
-	// body map[string]any
 	body []byte
 	code int
 	howl error
