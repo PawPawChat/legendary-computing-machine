@@ -9,8 +9,9 @@ import (
 	"sync"
 	"time"
 
+	chatpb "github.com/pawpawchat/chat/api/pb"
 	"github.com/pawpawchat/core/config"
-	profile "github.com/pawpawchat/profile/api/pb"
+	profilepb "github.com/pawpawchat/profile/api/pb"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
@@ -56,10 +57,18 @@ func settingUpServer(env config.Environment) *http.Server {
 	return httpServer
 }
 
-func profileServiceConn(addr string) profile.ProfileServiceClient {
+func profileServiceConn(addr string) profilepb.ProfileServiceClient {
 	conn, err := grpc.NewClient(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatal(err)
 	}
-	return profile.NewProfileServiceClient(conn)
+	return profilepb.NewProfileServiceClient(conn)
+}
+
+func chatServiceConn(addr string) chatpb.ChatServiceClient {
+	conn, err := grpc.NewClient(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		log.Fatal(err)
+	}
+	return chatpb.NewChatServiceClient(conn)
 }

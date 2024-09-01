@@ -5,14 +5,16 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"reflect"
+	"time"
 
 	"google.golang.org/grpc/status"
 )
 
 func WriteProtoError(w http.ResponseWriter, err error) {
 	type convert struct {
-		Message string
-		Details []any
+		Message string `json:"message"`
+		Details []any  `json:"details"`
 	}
 
 	status := status.Convert(err)
@@ -28,8 +30,8 @@ func WriteProtoError(w http.ResponseWriter, err error) {
 
 func WriteMissingFieldsError(w http.ResponseWriter, fields []string) {
 	type convert struct {
-		Message string
-		Fields  []string
+		Message string   `json:"message"`
+		Fields  []string `json:"fields"`
 	}
 
 	conv := convert{
@@ -42,26 +44,42 @@ func WriteMissingFieldsError(w http.ResponseWriter, fields []string) {
 }
 
 func WriteParseBodyError(w http.ResponseWriter, err error) {
-	type convert struct {
-		Message string
-		Field   string
-		Reason  string
-	}
+	var convert any
 
-	conv := convert{
-		Message: "failed to parse the request body",
-	}
-
-	switch jserr := err.(type) {
+	switch err := err.(type) {
 	case *json.SyntaxError:
-		conv.Reason = fmt.Sprintf("syntax error at byte offset %d", jserr.Offset)
+		convert = struct {
+			Message string `json:"message"`
+			Offset  string `json:"offset"`
+		}{
+			"failed to parse request body, syntax error",
+			fmt.Sprintf("at byte %d", err.Offset),
+		}
 	case *json.UnmarshalTypeError:
-		conv.Field = jserr.Field
-		conv.Reason = fmt.Sprintf("expected type %s but got %s", jserr.Type, jserr.Value)
+		convert = struct {
+			Message string `json:"message"`
+			Field   string `json:"field"`
+			Details string `json:"details"`
+		}{
+			"failed to parse request body",
+			err.Field,
+			fmt.Sprintf("expected type %s but got %s", err.Type, err.Value),
+		}
+	case *time.ParseError:
+		convert = struct {
+			Message  string `json:"message"`
+			Expected string `json:"expected"`
+			Received string `json:"received"`
+		}{
+			"failed to parse request body, time parsing",
+			err.Layout,
+			err.ValueElem,
+		}
 	default:
-		conv.Reason = err.Error()
+		slog.Debug("unexpected error", "type", reflect.TypeOf(err), "msg", err.Error())
+		convert = err
 	}
 
-	slog.Error(conv.Message, "error", err)
-	Json().Body(map[string]any{"error": conv}).BadRequest().MustWrite(w)
+	slog.Error("", "msg", convert)
+	Json().Body(map[string]any{"error": convert}).BadRequest().MustWrite(w)
 }

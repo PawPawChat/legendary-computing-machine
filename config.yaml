@@ -24,8 +24,9 @@ environment:
       
         profile: localhost:9402
       
-        chat: localhost:9403
+        chat: localhost:9403 
+             #localhost:9404 websocket server
       
-        s3: localhost:9404
+        s3: localhost:9405
 
       log_level: debug
